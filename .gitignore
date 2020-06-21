@@ -1,0 +1,13 @@
+# Cmake
+build/
+**/CmakeFiles/
+**/*.cmake
+**/CmakeCache.txt
+**/*.log
+**/Makefile
+
+# VS code
+**/.vscode/
+
+# MacOS
+.DS_Store

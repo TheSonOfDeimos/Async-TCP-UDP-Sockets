@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(Experiment)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(TARG SocketTest)
+file(GLOB SOURCES     
+    "src/threadService/*.cpp"
+    "src/threadService/*.hpp"
+
+    "src/socket/*.cpp"
+    "src/socket/*.hpp"
+    
+    "src/*.cpp"
+    "src/*.hpp")
+add_executable(${TARG} ${SOURCES})
