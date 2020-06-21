@@ -31,15 +31,17 @@ public:
     template <class... Args>
     using connect_function_handler = std::function<void(Args&& ..., const error_code)>;
 
-
     BaseSocket(const SocketType& t_sock_type);
     virtual ~BaseSocket() = default;
 
-    int rawSocket();
-    bool isClosed();
+    int& rawSocket();
+    bool isClosed() const;
     int closeRaw();
 
-protected:
+    sockaddr_in& getAddress();
+    EndPoint& getEndPoint();
+
+private:
     int m_raw_sock = 0;
     sockaddr_in m_address;
     bool m_is_closed = false;

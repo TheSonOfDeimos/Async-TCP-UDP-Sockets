@@ -9,29 +9,53 @@
 
 
 char buff[1024];
+TaskPool task_pool;
+TCPSocket sock(task_pool);
+TCPAcceptor acceptor(task_pool, {"0.0.0.0", 8888});
+
+void startAccept();
+
+void acceptHandle(TCPSocket *new_session, const std::size_t error)
+{
+    if (!error)
+    {
+        std::cout << std::this_thread::get_id() << " New Connection\n";
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    else
+    {
+        delete new_session;
+    }
+
+    startAccept();
+}
+
+void startAccept()
+{
+    TCPSocket *new_session = new TCPSocket(task_pool);
+    acceptor.acceptAsync(new_session,
+                           std::bind(&acceptHandle, new_session,
+                                       std::placeholders::_1));
+}
+
+
 
 int main()
 {
-
-	TaskPool task_pool;
 	ThreadPool thread_pool;
 	thread_pool.newThread(&TaskPool::run, &task_pool);
 	thread_pool.newThread(&TaskPool::run, &task_pool);
 	thread_pool.newThread(&TaskPool::run, &task_pool);
 
-	UDPAcceptor acceptor(task_pool, {"0.0.0.0", 8888});
-
-	acceptor.readAsync(buff, 1024, std::bind(
-
-		[&](char* buff, std::size_t buff_size, const std::size_t err, int bt)
-		{
-			std::cout << "New Message: " << buff << "\n";
-		},
-		buff, 1024, std::placeholders::_1, std::placeholders::_1));
-	acceptor.write(buff, 1024);
+	startAccept();
 	
+
+	while (1)
+	{
+		/* code */
+	}
 	
-	std::this_thread::sleep_for(std::chrono::seconds(3));
+	//std::this_thread::sleep_for(std::chrono::seconds(3));
 	task_pool.stop();
 	thread_pool.joinAll();
 

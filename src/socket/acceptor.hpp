@@ -37,15 +37,16 @@ TCPAcceptor::TCPAcceptor(TaskPool &t_task_pool, const EndPoint &t_end_point)
     : BaseSocket(BaseSocket::TCP),
       m_task_pool(t_task_pool)
 {
-    if (inet_pton(AF_INET, t_end_point.m_host.c_str(), &this->BaseSocket::m_address.sin_addr) <= 0)
+    if (inet_pton(AF_INET, t_end_point.m_host.c_str(), &this->getAddress().sin_addr) <= 0)
     {
         throw std::logic_error("Invalid address. Address type not supported.");
     }
 
-    this->BaseSocket::m_address.sin_family = AF_INET;
-    this->BaseSocket::m_address.sin_port = htons(t_end_point.m_port);
 
-    if (bind(this->BaseSocket::m_raw_sock, (const sockaddr *)&this->BaseSocket::m_address, sizeof(this->BaseSocket::m_address)) < 0)
+    this->getAddress().sin_family = AF_INET;
+    this->getAddress().sin_port = htons(t_end_point.m_port);
+
+    if (bind(this->rawSocket(), (const sockaddr *)&this->getAddress(), sizeof(this -> getAddress())) < 0)
     {
         throw std::logic_error("Cant bind socket!");
     }
@@ -53,9 +54,8 @@ TCPAcceptor::TCPAcceptor(TaskPool &t_task_pool, const EndPoint &t_end_point)
 
 int TCPAcceptor::accept(TCPSocket *t_socket)
 {
-    if (listen(this->BaseSocket::m_raw_sock, 10) < 0)
+    if (listen(this->rawSocket(), 10) < 0)
     {
-        //onError(errno, "Error: Server can't listen the socket.");
         return -1;
     }
 
@@ -64,19 +64,17 @@ int TCPAcceptor::accept(TCPSocket *t_socket)
 
     int newSock;
 
-    while ((newSock = ::accept(this->BaseSocket::m_raw_sock, (sockaddr *)&newSocketInfo, &newSocketInfoLength)) < 0)
+    while ((newSock = ::accept(this->rawSocket(), (sockaddr *)&newSocketInfo, &newSocketInfoLength)) < 0)
     {
-        if (errno == EBADF || errno == EINVAL)
+        if (errno == EBADF || errno == EINVAL) {
             return -1;
-
-        //onError(errno, "Error while accepting a new connection.");
+        }
         return -1;
     }
 
-    if (!this->BaseSocket::isClosed() && newSock >= 0)
-    {
-        t_socket->BaseSocket::m_raw_sock = newSock;
-        t_socket->BaseSocket::m_address = newSocketInfo;
+    if (!this->BaseSocket::isClosed() && newSock >= 0) {
+        t_socket->rawSocket() = newSock;
+        t_socket->getAddress() = newSocketInfo;
     }
 
     return 0;
@@ -104,15 +102,15 @@ void TCPAcceptor::acceptAsync(TCPSocket *t_socket, connect_function_handler<Args
 UDPAcceptor::UDPAcceptor(TaskPool &t_task_pool, const EndPoint &t_end_point)
     : UDPSocket(t_task_pool)
 {
-    if (inet_pton(AF_INET, t_end_point.m_host.c_str(), &this->BaseSocket::m_address.sin_addr) <= 0)
+    if (inet_pton(AF_INET, t_end_point.m_host.c_str(), &this->getAddress().sin_addr) <= 0)
     {
         throw std::logic_error("Invalid address. Address type not supported.");
     }
 
-    this->BaseSocket::m_address.sin_family = AF_INET;
-    this->BaseSocket::m_address.sin_port = htons(t_end_point.m_port);
+    this->getAddress().sin_family = AF_INET;
+    this->getAddress().sin_port = htons(t_end_point.m_port);
 
-    if (bind(this->BaseSocket::m_raw_sock, (const sockaddr *)&this->BaseSocket::m_address, sizeof(this->BaseSocket::m_address)) < 0)
+    if (bind(this->rawSocket(), (const sockaddr *)&this->getAddress(), sizeof(this->getAddress())) < 0)
     {
         throw std::logic_error("Cannot bind the socket.");
     }

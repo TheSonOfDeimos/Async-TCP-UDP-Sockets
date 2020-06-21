@@ -44,7 +44,7 @@ UDPSocket::UDPSocket(TaskPool &t_task_pool)
 
 void UDPSocket::setEndPoint(const EndPoint &t_end_point)
 {
-    this->BaseSocket::m_end_point = t_end_point;
+    this->getEndPoint() = t_end_point;
     return;
 }
 
@@ -63,29 +63,27 @@ int UDPSocket::write(const char *t_bytes, const size_t t_bytes_length)
     hints.ai_socktype = SOCK_DGRAM;
 
     int status;
-    if ((status = getaddrinfo(this->BaseSocket::m_end_point.m_host.c_str(), NULL, &hints, &res)) != 0)
+    if ((status = getaddrinfo(this->getEndPoint().m_host.c_str(), NULL, &hints, &res)) != 0)
     {
-        //onError(errno, "Invalid address." + std::string(gai_strerror(status)));
         return -1;
     }
 
     for (it = res; it != NULL; it = it->ai_next)
     {
         if (it->ai_family == AF_INET)
-        { // IPv4
+        {
             memcpy((void *)(&hostAddr), (void *)it->ai_addr, sizeof(sockaddr_in));
-            break; // for now, just get first ip (ipv4).
+            break;
         }
     }
 
     freeaddrinfo(res);
 
-    hostAddr.sin_port = htons(this->BaseSocket::m_end_point.m_port);
+    hostAddr.sin_port = htons(this->getEndPoint().m_port);
     hostAddr.sin_family = AF_INET;
 
-    if (sendto(this->BaseSocket::m_raw_sock, t_bytes, t_bytes_length, 0, (sockaddr *)&hostAddr, sizeof(hostAddr)) < 0)
+    if (sendto(this->rawSocket(), t_bytes, t_bytes_length, 0, (sockaddr *)&hostAddr, sizeof(hostAddr)) < 0)
     {
-        //onError(errno, "Cannot send message to the address.");
         return -1;
     }
 
@@ -97,7 +95,7 @@ int UDPSocket::read(char *t_bytes, const size_t t_bytes_length)
     sockaddr_in hostAddr;
     socklen_t hostAddrSize = sizeof(hostAddr);
 
-    auto res = recvfrom(this->BaseSocket::m_raw_sock, t_bytes, t_bytes_length, 0, (sockaddr *)&hostAddr, &hostAddrSize);
+    auto res = recvfrom(this->rawSocket(), t_bytes, t_bytes_length, 0, (sockaddr *)&hostAddr, &hostAddrSize);
     t_bytes[res] = '\0';
     return res;
 }

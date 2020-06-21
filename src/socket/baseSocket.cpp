@@ -9,24 +9,33 @@ BaseSocket::BaseSocket(const SocketType &t_sock_type)
     }
 }
 
-int BaseSocket::rawSocket()
+int& BaseSocket::rawSocket()
 {
     return m_raw_sock;
 }
 
-bool BaseSocket::isClosed()
+bool BaseSocket::isClosed() const
 {
     return m_is_closed;
 }
 
 int BaseSocket::closeRaw()
 {
-    if(m_is_closed){
+    if (m_is_closed)
+    {
         return -1;
     }
 
     m_is_closed = true;
-    return ::close(this->m_raw_sock); 
+    return ::close(this->m_raw_sock);
+}
 
+sockaddr_in& BaseSocket::getAddress() 
+{
+    return m_address;
+}
 
+EndPoint& BaseSocket::getEndPoint()
+{
+    return m_end_point;
 }

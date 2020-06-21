@@ -58,19 +58,20 @@ int TCPSocket::connect(const EndPoint &t_point_to_connect)
     for (it = res; it != NULL; it = it->ai_next)
     {
         if (it->ai_family == AF_INET)
-        { // IPv4
-            memcpy((void *)(&this->m_address), (void *)it->ai_addr, sizeof(sockaddr_in));
+        {
+            memcpy((void *)(&this->getAddress()), (void *)it->ai_addr, sizeof(sockaddr_in));
             break;
         }
     }
 
     freeaddrinfo(res);
 
-    this->m_address.sin_family = AF_INET;
-    this->m_address.sin_port = htons(t_point_to_connect.m_port);
-    this->m_address.sin_addr.s_addr = (uint32_t)this->m_address.sin_addr.s_addr;
+    sockaddr_in& addr = this -> getAddress();
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(t_point_to_connect.m_port);
+    addr.sin_addr.s_addr = (uint32_t)addr.sin_addr.s_addr;
 
-    if (::connect(this->BaseSocket::m_raw_sock, (const sockaddr *)&this->BaseSocket::m_address, sizeof(sockaddr_in)) < 0)
+    if (::connect(this->rawSocket(), (const sockaddr *)&this->getAddress(), sizeof(sockaddr_in)) < 0)
     {
         return errno;
     }
@@ -86,7 +87,7 @@ int TCPSocket::write(const std::string t_message)
 int TCPSocket::write(const char *t_bytes, const size_t t_bytes_length)
 {
     int bytes_transferred = 0;
-    if ((bytes_transferred = send(this->m_raw_sock, t_bytes, t_bytes_length, 0)) < 0)
+    if ((bytes_transferred = send(this->rawSocket(), t_bytes, t_bytes_length, 0)) < 0)
     {
         return -1;
     }
@@ -95,7 +96,7 @@ int TCPSocket::write(const char *t_bytes, const size_t t_bytes_length)
 
 int TCPSocket::read(char *t_bytes, const size_t t_bytes_length)
 {
-    auto res = recv(this -> BaseSocket::m_raw_sock, t_bytes, t_bytes_length, 0);
+    auto res = recv(this -> rawSocket(), t_bytes, t_bytes_length, 0);
     t_bytes[res] = '\0';
     return res;
 }
